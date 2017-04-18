@@ -1,106 +1,90 @@
 module main(clk);
-	input clk ;
+	input clk;
 	reg [31:0] pc;
-	reg [63:0] fetchDecode ;
-	reg  [146:0] decodeExecute;
-	reg [106:0] executeMemory ;
-	reg  [70:0] memoryWriteBack;
-	reg  [7:0] instructionMemory[511:0];
-	reg  [7:0] dataMemory [511:0];
+	//fetch reg
+	reg [31:0] fetchDecode_PC;
+	reg [31:0] fetchDecode_instruction;
+	//decode reg
+	reg  [31:0] decodeExecute_PC;
+	reg  [31:0] decodeExecute_readReg1;
+	reg  [31:0] decodeExecute_readReg2;
+	reg  [31:0] decodeExecute_signExtend;
+	reg  [4:0] decodeExecute_rt;
+	reg  [4:0] decodeExecute_rd;//write register
+	reg  [1:0] decodeExecute_wb;//reqWrite memToReg
+	reg  [2:0] decodeExecute_mem;//memRead memWrite branch
+	reg  [4:0] decodeExecute_ex;//ALUSrc regDest ALUOp(3 bits)
+	//execute reg
+	reg [31:0] executeMemory_branchAddress;
+	reg executeMemory_zf;
+	reg [31:0] executeMemory_aluOut;
+	reg [31:0] executeMemory_regToMem;
+	reg [4:0] executeMemory_rd;//write register
+	reg [1:0] executeMemory_wb;//reqWrite memToReg
+	reg [2:0] executeMemory_mem;//memRead memWrite branch
+	//memory reg
+	reg  [31:0] memoryWriteBack_aluOut;
+	reg  [31:0] memoryWriteBack_memOut;
+	reg  [4:0] memoryWriteBack_rd;//write register
+	reg  [1:0] memoryWriteBack_wb;//reqWrite memToReg
+	//instruction memory
+	reg  [31:0] instructionMemory[511:0];
+	//data memory
+	reg  [31:0] dataMemory [511:0];
+	//ALU
 	reg [31:0] out;
 	reg zeroFlag;
+	reg [2:0] ALUOP ;
+	//Register file
 	reg [31:0] r1;
 	reg [31:0]r2;
-	reg [2:0] ALUOP ;
-	reg pcSrc ;
-	reg stall;
+	//Control signals
+	reg pcSrc;
 	reg branch; 
-	reg RegDst ;
-	reg MemRead ;
-	reg MemToReg ;
-	reg ALUOP ;
-	reg MemWrite ;
-	reg ALUsrc ;
+	reg RegDst;
+	reg MemRead;
+	reg MemToReg;
+	reg MemWrite;
+	reg ALUsrc;
 	reg RegWrite;
-	reg counter  ;
-	
+	//modules used
+	//ALU aluCircuit(out,zeroFlag,r1,r2,ALUOP);
+	//registerFile registers();
+	//Fetch stage
 	always @(posedge clk)
+		
 		begin
-			if(counter ==2 )
-				stall =0 ;
-			else if (stall ==1 )
-				counter =counter+1  ;
-		end
-	
-	
-	always @(posedge clk)
-		begin
-			if(stall == 1'b0)
-				begin
-					if(branch ==1'b0)
-						pc = pc+4 ;
-					else  
-						pc = executeMemory[31:0] ; 
-	
-					fetchDecode [7:0] <= instructionMemory[pc-1] ;
-					fetchDecode [15:8] <= instructionMemory[pc-2] ;
-					fetchDecode [23:16] <= instructionMemory[pc-3] ;
-					fetchDecode [31:24] <= instructionMemory[pc-4] ;
-					fetchDecode [63:32] <= pc ;
-				end
+			if(branch ==1'b0)
+				pc = pc+1 ;
+			else  
+				pc = executeMemory_branchAddress; 			
+			fetchDecode_instruction <= instructionMemory[pc] ;
+			fetchDecode_PC <= pc ;
 		end
 	 
+	//Decode stage
 	always @(posedge clk)
 		begin
-			if(fetchDecode != 64'b0 && stall != 1) // if fetchdecode is 0 or there is stall stop .
-				begin
-					if( fetchDecode[31:26] == 6'b000100) // if instruction is branch stall on next clock cycle .
-						stall <= 1'b1 ;
-					if(fetchDecode[31:26] == 6'b000000 ) //  R instructions
-						begin
-							case(fetchDecode[5:0])
-								5'h20 : 
-								5'h22 : 
-								5'h0 : 
-								5'h2 : 
-								5'h24 : 
-								5'h25 : 
-								5'h2A : 
-							endcase
-						end
-					else if(fetchDecode[31:26] == 6'h23 )   // I lw
-						begin
-	
-						end
-					else if(fetchDecode[31:26] == 6'h2B )    // I SW
-						begin
-						
-						end
-					else if(fetchDecode[31:26] == 6'h8 )     /// I ADDI
-						begin
-	
-						end
-					else if(fetchDecode[31:26] == 6'hd )    /// I ORI
-						begin
-	
-						end
-					else if(fetchDecode[31:26] == 6'hc )   // I ADDI
-						begin
-	
-						end
-					else if(fetchDecode[31:26] == 6'h4 )  /// I BEQ
-						begin
-	
-						end
-					else if(fetchDecode[31:26] == 6'h5 )  /// I BNE
-						begin
-	
-						end
-				end
+			
 		end
 	
+	//Execute stage
+	always @(posedge clk)
+		begin
+			
+		end
 	
-	//ALU aluCircuit(out,zeroFlag,r1,r2,ALUOP);
+	//Memory stage
+	always @(posedge clk)
+		begin
+			
+		end
+	
+	//Write back stage
+	always @(posedge clk)
+		begin
+			
+		end
 		
 	
 	// for pc 
