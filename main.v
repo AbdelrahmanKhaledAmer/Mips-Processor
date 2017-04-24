@@ -1,9 +1,20 @@
-module main(clk);
+module main(clk , instruction , instructionAddress , data , dataAddress , writeEnable);
 	input clk;
+	input writeEnable ;
+	input [6:0] instructionAddress ;
+	input [6:0] dataAddress ;
+	input [31:0] instruction ;
+	input [31:0] data ;
+	
+	
+	//program counter
 	reg [31:0] pc;
+	
 	//fetch reg
 	reg [31:0] fetchDecode_PC;
 	reg [31:0] fetchDecode_instruction;
+	//comment
+	
 	//decode reg
 	reg  [31:0] decodeExecute_PC;
 	wire [31:0] decodeExecute_readData1;
@@ -14,6 +25,7 @@ module main(clk);
 	reg  [1:0] decodeExecute_wb;//reqWrite memToReg
 	reg  [2:0] decodeExecute_mem;//memRead memWrite branch
 	reg  [4:0] decodeExecute_ex;//ALUSrc regDest ALUOp(3 bits)
+	
 	//execute reg
 	reg [31:0] executeMemory_branchAddress;
 	reg executeMemory_zf;
@@ -22,22 +34,28 @@ module main(clk);
 	reg [4:0] executeMemory_rd;//write register
 	reg [1:0] executeMemory_wb;//reqWrite memToReg
 	reg [2:0] executeMemory_mem;//memRead memWrite branch
+	
 	//memory reg
 	reg  [31:0] memoryWriteBack_aluOut;
 	reg  [31:0] memoryWriteBack_memOut;
 	reg  [4:0] memoryWriteBack_rd;//write register
 	reg  [1:0] memoryWriteBack_wb;//regWrite memToReg   0 RegWrite   / 1 MemtoReg
+	
 	//instruction memory
-	reg  [31:0] instructionMemory[511:0];
+	reg  [31:0] instructionMemory[127:0];
+	
 	//data memory
-	reg  [31:0] dataMemory [511:0];
+	reg  [31:0] dataMemory [127:0];
+	
 	//ALU
 	wire [31:0] out; //ALUOut
 	wire zeroFlag;
 	reg [2:0] ALUOP ;
+	
 	//Register file
 	reg [31:0] r1;
 	reg [31:0]r2;
+	
 	//Control signals
 	wire pcSrc;
 	reg branch; 
@@ -47,11 +65,24 @@ module main(clk);
 	reg MemWrite;
 	reg ALUsrc;
 	reg RegWrite;
+	
+	// TestBench /////////////////
+	always @(posedge writeEnable)
+	begin
+		instructionMemory[instructionAddress] = instruction ;
+		dataMemory [dataAddress] = data ;
+		pc <=0 ;
+		$monitor("IM = %b\n DM = %d\n",instructionMemory[instructionAddress],dataMemory [dataAddress]);
+	end
+	//////////////////
+	
 	//modules used
 	ALU aluCircuit(out,zeroFlag,decodeExecute_readData1,(ALUSrc)?decodeExecute_readData2:decodeExecute_signExtend,ALUOP,decodeExecute_signExtend[10:6]);
 	registerFile registers(clk ,fetchDecode_instruction [25:21],  fetchDecode_instruction[20:16], memoryWriteBack_rd,(memoryWriteBack_wb [1])? memoryWriteBack_aluOut: memoryWriteBack_memOut, memoryWriteBack_wb[0], decodeExecute_readData1, decodeExecute_readData2);
+	
 	//assignments
 	assign pcSrc = executeMemory_zf & executeMemory_mem[2];
+	
 	//Fetch stage
 	always @(posedge clk)
 		
@@ -61,7 +92,10 @@ module main(clk);
 			if(pcSrc ==1'b1)
 				pc = executeMemory_branchAddress; 	
 			else  
-				pc = pc+1 ;				
+				pc = pc+1 ;		
+
+	#5	$monitor("fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
+
 		end
 	 
 	//Decode stage
@@ -166,6 +200,9 @@ module main(clk);
 			decodeExecute_ex[1] <= RegDst;
 			decodeExecute_ex[4:2]<= ALUOP;
 		
+		#10	$monitor("decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
+
+		
 		end
 	
 	//Execute stage
@@ -178,6 +215,8 @@ module main(clk);
 			executeMemory_rd <= (decodeExecute_ex[1])?decodeExecute_rd:decodeExecute_rt;
 			executeMemory_wb <= decodeExecute_wb;
 			executeMemory_mem <= decodeExecute_mem;
+		#15	$monitor("executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
+
 		end
 	
 	//Memory stage
@@ -192,6 +231,9 @@ module main(clk);
 				dataMemory[executeMemory_aluOut] <= executeMemory_regToMem; 
 			memoryWriteBack_rd <= executeMemory_rd;
 			memoryWriteBack_wb <= decodeExecute_wb;
+		#20 	$monitor("memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
+	
+		
 		end
-
+	
 endmodule

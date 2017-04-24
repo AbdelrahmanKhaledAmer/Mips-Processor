@@ -20,7 +20,8 @@ module ALU (OUT, ZeroFlag, In1, In2, ALUOP , shamt);
 			5 : OUT = In1 >> shamt;//8 SRL
 			6 : OUT = 3'bx;//11 BEQ //12 BNE
 			7 : OUT = In1 < In2;//13 SLT
-		endcase 
+		endcase
+		$monitor("OUT = %d\n N1 = %d\n N2 = %d\n",OUT, In1,In2);
 	end
-
+//comment
 endmodule
