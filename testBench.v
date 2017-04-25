@@ -12,11 +12,12 @@ main mips(clk, instruction, instructionAddress, data, dataAddress, writeEnable);
 initial 
 	begin
 		//addi r2 r1 2
-		instruction <= 32'b001000_00001_00010_0000000000000010;
+		instruction <= 32'b001000_00001_00010_0000000000000011;//addi
+		//instruction <= 32'b100011_00000_00001_0000000000000000;//lw 
 		instructionAddress <= 7'd0;
 		//data
-		data <= 32'd2;
-		dataAddress <= 7'd1;
+		data <= 32'd12;
+		dataAddress <= 7'd0;
 		writeEnable <= 1;
 	end
 	//comment
@@ -26,12 +27,12 @@ initial
 		#1000 
 		forever 
 			begin
-				#30 clk <= ~clk; 
+				#200 clk <= ~clk; 
 			end
 	end	
 	
 initial
-	#1300 $finish;
+	#3800 $finish;
 	
 endmodule
 

@@ -1,16 +1,18 @@
-module ALU (OUT, ZeroFlag, In1, In2, ALUOP , shamt); 
+module ALU (clk,OUT, ZeroFlag, In1, In2, ALUOP , shamt); 
+	input clk;
 	input [31:0] In1, In2;
 	input [4:0] shamt ;
 	input [2:0] ALUOP;
 	output [31:0] OUT;
 	reg [31:0] OUT;
 	output ZeroFlag;
-	wire ZeroFlag;
+	reg ZeroFlag;
 	
-	assign ZeroFlag = (In1==In2)? 1'b1 : 1'b0 ;
+	
 
-	always @ (In1 or In2 or ALUOP)
+	always @ (posedge clk)
 	begin
+	 ZeroFlag = (In1==In2)? 1'b1 : 1'b0 ;
 		case (ALUOP)
 			0 : OUT = In1 + In2; //0 ADD //2 ADDi //3 LW //4 SW
 			1 : OUT = In1 - In2; //1 SUB // Handle Overflow
@@ -21,7 +23,5 @@ module ALU (OUT, ZeroFlag, In1, In2, ALUOP , shamt);
 			6 : OUT = 3'bx;//11 BEQ //12 BNE
 			7 : OUT = In1 < In2;//13 SLT
 		endcase
-		$monitor("OUT = %d\n N1 = %d\n N2 = %d\n",OUT, In1,In2);
 	end
-//comment
 endmodule
