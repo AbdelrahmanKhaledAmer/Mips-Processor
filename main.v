@@ -53,7 +53,7 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	reg [2:0] ALUOP ;
 
 	//Control signals
-	wire pcSrc;
+	reg pcSrc;
 	reg branch; 
 	reg RegDst;
 	reg MemRead;
@@ -84,7 +84,7 @@ wire [31:0] readData1, readData2;
 	registerFile registers(clk ,fetchDecode_instruction [25:21],  fetchDecode_instruction[20:16], memoryWriteBack_rd,(memoryWriteBack_wb [0])? memoryWriteBack_memOut:memoryWriteBack_aluOut, memoryWriteBack_wb[1], readData1, readData2);
 	
 	//assignments
-	assign pcSrc = executeMemory_zf & executeMemory_mem[2];
+	//assign pcSrc = executeMemory_zf & executeMemory_mem[2];
 	
 	//Fetch stage
 	always @(posedge clk)
@@ -92,6 +92,7 @@ wire [31:0] readData1, readData2;
 		begin
 			fetchDecode_instruction <= instructionMemory[pc] ;
 			fetchDecode_PC <= pc+1 ;
+			pcSrc = executeMemory_zf & executeMemory_mem[2];
 			if(pcSrc ==1'b1)
 				pc <= executeMemory_branchAddress; 	
 			else  
@@ -230,9 +231,13 @@ wire [31:0] readData1, readData2;
 				//#1	$monitor($time," Value of r1main = %d\n Value of r2main = %d",decodeExecute_readData1,decodeExecute_readData2);
 				#20  $monitor($time," memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
 				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
-				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);							
+				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
+				#5 	$monitor($time," read1 =%d read2 =%d ",readData1,readData2);
 				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
 			//	#35 $monitor($time , "Data Stored = %d\n " , dataMemory[0]);
+					#20	$monitor($time," pc =%d pcrc =%d ",pc,pcSrc);
+
+			
 	end
 	
 	

@@ -26,14 +26,14 @@ initial
 
 		instructionAddress <= 7'd0;
 		//data
-		data <= 32'd12;
-		dataAddress <= 7'd0;
+		//data <= 32'd12;
+	//	dataAddress <= 7'd0;
 		writeEnable <= 1;
-
-//	#5 writeEnable <=0 ;
+	#5 writeEnable <=0 ;
+	#2 instruction <= 32'b001000_00001_00010_0000000000000011;//addi
 //	#7 instruction <= 32'b100011_00000_00001_0000000000000000;//lw 
-//	#7 instructionAddress <= 7'd1;
-//	#10 writeEnable <=1 ;
+	#7 instructionAddress <= 7'd64;
+	#10 writeEnable <=1 ;
 
 //	#15 writeEnable <=0 ;
 //	#17 instruction <= 32'b101011_00000_00011_0000000000000000;//sw 
@@ -55,7 +55,7 @@ initial
 	end	
 	
 initial
-	#3000 $finish;
+	#4200 $finish;
 	
 endmodule
 
