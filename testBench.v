@@ -22,6 +22,7 @@ initial
 		//	instruction <= 32'b000000_00001_00010_00011_00000_100100;// and
 		//instruction <= 32'b000000_00001_00010_00011_00000_100101;// or
 		//instruction <= 32'b001100_00001_00010_0000000001111111;// andi
+		instruction <= 32'b000100_00001_00010_0000000000111111;// beq
 
 		instructionAddress <= 7'd0;
 		//data

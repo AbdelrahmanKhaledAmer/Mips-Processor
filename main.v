@@ -202,7 +202,7 @@ wire [31:0] readData1, readData2;
 					ALUOP <= 0 ;
 			end
 			
-			#1 			//// add delay here  why why why why why why why why why
+			#5		//// add delay here  why why why why why why why why why
 			decodeExecute_PC = fetchDecode_PC;
 			decodeExecute_signExtend = {{16{fetchDecode_instruction[15]}},fetchDecode_instruction[15:0]};
 			decodeExecute_rt = fetchDecode_instruction[20:16];
@@ -240,7 +240,7 @@ wire [31:0] readData1, readData2;
 	always @(posedge clk)
 		#50
 		begin
-			executeMemory_branchAddress = decodeExecute_PC + decodeExecute_signExtend*4;
+			executeMemory_branchAddress = decodeExecute_PC + decodeExecute_signExtend ;//*4;
 			executeMemory_zf = zeroFlag;
 			executeMemory_aluOut = out;
 			executeMemory_regToMem = decodeExecute_readData2;
