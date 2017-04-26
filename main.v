@@ -64,7 +64,7 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	
 	
 //Register file
-reg [31:0] read_data_1, read_data_2;	
+wire [31:0] readData1, readData2;	
 
 ////////////
 
@@ -75,7 +75,7 @@ reg [31:0] read_data_1, read_data_2;
 		instructionMemory[instructionAddress] = instruction ;
 		dataMemory [dataAddress] = data ;
 		pc <=0 ;
-		//$monitor("IM = %b\n DM = %d\n",instructionMemory[instructionAddress],dataMemory [dataAddress]);
+	//	$monitor("IM = %b\n DM = %d\n",instructionMemory[instructionAddress],dataMemory [dataAddress]);
 	end
 	//////////////////
 	
@@ -221,6 +221,7 @@ reg [31:0] read_data_1, read_data_2;
 				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
 				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);							
 				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
+				#35 $monitor($time , "Data Stored = %d\n " , dataMemory[0]);
 	end
 	
 	
@@ -236,7 +237,7 @@ reg [31:0] read_data_1, read_data_2;
 			executeMemory_wb = decodeExecute_wb;
 			executeMemory_mem = decodeExecute_mem;
 		
-				$monitor($time," regWrite and metToReg %d ",executeMemory_wb[0]);
+			//	$monitor($time," regWrite and metToReg %d ",executeMemory_wb[0]);
 		end
 	
 	//Memory stage
@@ -252,8 +253,7 @@ reg [31:0] read_data_1, read_data_2;
 				dataMemory[executeMemory_aluOut] = executeMemory_regToMem; 
 			memoryWriteBack_rd = executeMemory_rd;
 			memoryWriteBack_wb = executeMemory_wb;
-		//#50 	$monitor("memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
-	
+		
 		end
 	
 endmodule
