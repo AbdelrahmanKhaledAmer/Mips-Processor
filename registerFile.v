@@ -14,9 +14,9 @@ module registerFile(clk,read_reg_1, read_reg_2, write_reg, write_data, regWrite,
 			for(i = 0 ; i < 32 ; i = i + 1)
 				begin
 					if(i==1)
-					registers[i] <= 32'd10 ;
+					registers[i] <= 32'd15 ;
 					else if(i==2)
-					registers[i] <= 32'd12 ;
+					registers[i] <= 32'd15 ;
 					else 
 					registers[i] <= 0;
 				end

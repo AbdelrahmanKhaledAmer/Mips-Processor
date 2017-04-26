@@ -167,6 +167,18 @@ wire [31:0] readData1, readData2;
 					RegWrite <= 1;		
 					ALUOP <= 3 ;
 			end
+		else if(fetchDecode_instruction[31:26] == 6'hC) // ANDI
+			begin
+					branch <= 0; 
+					RegDst <= 0;
+					MemRead <= 0;
+					MemToReg<= 0;
+					MemWrite <=0;
+					ALUsrc <=1;
+					RegWrite <= 1;		
+					ALUOP <= 2 ;
+			end
+			
 		else if(fetchDecode_instruction[31:26] == 6'h4) // BEQ
 			begin
 					branch <= 1; 
