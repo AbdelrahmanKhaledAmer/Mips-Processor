@@ -14,7 +14,8 @@ initial
 		//addi r2 r1 2
 		//instruction <= 32'b001000_00001_00010_0000000000000011;//addi
 		//instruction <= 32'b100011_00000_00001_0000000000000000;//lw 
-		instruction <= 32'b101011_00000_00001_0000000000000000; //sw
+		//instruction <= 32'b101011_00000_00001_0000000000000000; //sw
+		instruction <= 32'b000000_00010_00001_00011_00000_100010;// sub
 		instructionAddress <= 7'd0;
 		//data
 		data <= 32'd12;
@@ -46,7 +47,7 @@ initial
 	end	
 	
 initial
-	#3200 $finish;
+	#3000 $finish;
 	
 endmodule
 

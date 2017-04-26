@@ -106,7 +106,6 @@ wire [31:0] readData1, readData2;
 			
 		if(fetchDecode_instruction[31:26] == 6'b0)// R type
 			begin
-
 					branch = 0; 
 					RegDst = 1;
 					MemRead = 0;
@@ -115,13 +114,13 @@ wire [31:0] readData1, readData2;
 					ALUsrc = 0;
 					RegWrite = 1;
 				case(fetchDecode_instruction[5:0])
-					5'h20 : ALUOP <= 0 ;  //add
-					5'h22 : ALUOP <= 1 ;//SUB
-					5'h0 : ALUOP <= 4 ; // SLL	
-					5'h2 : ALUOP  <= 5 ;//SRL	
-					5'h24 : ALUOP <= 2 ;// AND		
-					5'h25 : ALUOP <= 3 ; // OR		
-					5'h2A : ALUOP <= 7 ;// SLT	
+					6'h20 : ALUOP <= 0 ;  //add
+					6'h22 : ALUOP <= 1 ;//SUB
+					6'h0 : ALUOP <= 4 ; // SLL	
+					6'h2 : ALUOP  <= 5 ;//SRL	
+					6'h24 : ALUOP <= 2 ;// AND		
+					6'h25 : ALUOP <= 3 ; // OR		
+					6'h2A : ALUOP <= 7 ;// SLT	
 				endcase
 			end
 		else if (fetchDecode_instruction[31:26] == 6'h23) //LW
@@ -221,7 +220,7 @@ wire [31:0] readData1, readData2;
 				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
 				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);							
 				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
-				#35 $monitor($time , "Data Stored = %d\n " , dataMemory[0]);
+			//	#35 $monitor($time , "Data Stored = %d\n " , dataMemory[0]);
 	end
 	
 	
@@ -237,7 +236,7 @@ wire [31:0] readData1, readData2;
 			executeMemory_wb = decodeExecute_wb;
 			executeMemory_mem = decodeExecute_mem;
 		
-			//	$monitor($time," regWrite and metToReg %d ",executeMemory_wb[0]);
+	//	#55	$monitor($time," out =%d ",executeMemory_aluOut);
 		end
 	
 	//Memory stage

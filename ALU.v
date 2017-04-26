@@ -13,6 +13,7 @@ module ALU (clk,OUT, ZeroFlag, In1, In2, ALUOP , shamt);
 	always @ (posedge clk)
 	begin
 	 ZeroFlag = (In1==In2)? 1'b1 : 1'b0 ;
+
 		case (ALUOP)
 			0 : OUT = In1 + In2; //0 ADD //2 ADDi //3 LW //4 SW
 			1 : OUT = In1 - In2; //1 SUB // Handle Overflow
@@ -23,5 +24,7 @@ module ALU (clk,OUT, ZeroFlag, In1, In2, ALUOP , shamt);
 			6 : OUT = 3'bx;//11 BEQ //12 BNE
 			7 : OUT = In1 < In2;//13 SLT
 		endcase
+		//	 $monitor("salem= %d salem2 = %d salem3 = %d salem4 = %d", OUT,ALUOP,In1 , In2);
+
 	end
 endmodule
