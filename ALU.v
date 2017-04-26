@@ -24,7 +24,7 @@ module ALU (clk,OUT, ZeroFlag, In1, In2, ALUOP , shamt);
 			6 : OUT = 3'bx;//11 BEQ //12 BNE
 			7 : OUT = In1 < In2;//13 SLT
 		endcase
-		//	 $monitor("salem= %d salem2 = %d salem3 = %d salem4 = %d", OUT,ALUOP,In1 , In2);
+		//	 $monitor("salem= %d salem2 = %d salem3 = %d salem4 = %d", OUT,ALUOP,In1 , shamt);
 
 	end
 endmodule
