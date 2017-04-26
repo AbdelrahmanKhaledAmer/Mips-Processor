@@ -17,11 +17,12 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	
 	//decode reg
 	reg  [31:0] decodeExecute_PC;
-	reg [31:0] decodeExecute_readData1;
-	reg [31:0] decodeExecute_readData2;
+	reg  [31:0] decodeExecute_readData1;
+	reg  [31:0] decodeExecute_readData2;
 	reg  [31:0] decodeExecute_signExtend;
 	reg  [4:0] decodeExecute_rt;
 	reg  [4:0] decodeExecute_rd;//write register
+	reg  [4:0] decodeExecute_rs; //rs for forwarding
 	reg  [1:0] decodeExecute_wb;//reqWrite memToReg
 	reg  [3:0] decodeExecute_mem;//memRead memWrite branch branchNotEqual
 	reg  [4:0] decodeExecute_ex;//ALUSrc regDest ALUOp(3 bits)
@@ -39,7 +40,7 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	reg  [31:0] memoryWriteBack_aluOut;
 	reg  [31:0] memoryWriteBack_memOut;
 	reg  [4:0] memoryWriteBack_rd;//write register
-	reg  [1:0] memoryWriteBack_wb;//regWrite memToReg   0 RegWrite   / 1 MemtoReg
+	reg  [1:0] memoryWriteBack_wb;//regWrite memToReg   0  MemtoReg  / 1 RegWrite 
 	
 	//instruction memory
 	reg  [31:0] instructionMemory[127:0];
@@ -67,8 +68,11 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 //Register file
 wire [31:0] readData1, readData2;	
 
-////////////
-
+// forwarding conditions
+reg execCondA;
+reg memCondA;
+reg execCondB;
+reg memCondB;
 	
 	// TestBench /////////////////
 	always @(posedge writeEnable)
@@ -80,12 +84,29 @@ wire [31:0] readData1, readData2;
 	end
 	//////////////////
 	
+	
+	///////// loop for printing the output
+	always @(posedge clk)
+	begin
+				    $display($time, "is current time\n");
+				//#1	$monitor($time," decode exec zero alusrc = %d",decodeExecute_ex[0]);
+				//#1	$monitor($time," Value of r1main = %d\n Value of r2main = %d",decodeExecute_readData1,decodeExecute_readData2);
+				#20  $monitor($time," memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
+				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
+				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
+				//#5 	$monitor($time," read1 =%d read2 =%d ",readData1,readData2);
+				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
+				#35 $monitor($time , "Data Stored = %d\n " , dataMemory[13]);
+					#20	$monitor($time," pc =%d pcrc =%d ",pc,pcSrc);
+
+			
+	end
+	
+	
 	//modules used
 	ALU aluCircuit(clk,out,zeroFlag,decodeExecute_readData1,(decodeExecute_ex[0])?decodeExecute_signExtend:decodeExecute_readData2,decodeExecute_ex[4:2],decodeExecute_signExtend[10:6]);
 	registerFile registers(clk ,fetchDecode_instruction [25:21],  fetchDecode_instruction[20:16], memoryWriteBack_rd,(memoryWriteBack_wb [0])? memoryWriteBack_memOut:memoryWriteBack_aluOut, memoryWriteBack_wb[1], readData1, readData2);
 	
-	//assignments
-	//assign pcSrc = executeMemory_zf & executeMemory_mem[2];
 	
 	//Fetch stage
 	always @(posedge clk)
@@ -212,14 +233,14 @@ wire [31:0] readData1, readData2;
 					ALUOP <= 0 ;
 			end
 			
-			#5		//// add delay here  why why why why why why why why why
+			#5		//// add delay here  
 			decodeExecute_PC = fetchDecode_PC;
 			decodeExecute_signExtend = {{16{fetchDecode_instruction[15]}},fetchDecode_instruction[15:0]};
+			decodeExecute_rs = fetchDecode_instruction[25:21]; //forwarding
 			decodeExecute_rt = fetchDecode_instruction[20:16];
 			decodeExecute_rd = fetchDecode_instruction[15:11];
 			decodeExecute_wb[0] = MemToReg ;
 			decodeExecute_wb[1] = RegWrite ;
-			//$display($time," hi there %d %d",decodeExecute_wb[0],decodeExecute_wb[1]);
 			decodeExecute_mem[0] = MemRead;
 			decodeExecute_mem[1] = MemWrite;
 			decodeExecute_mem[2] = branch;
@@ -227,29 +248,37 @@ wire [31:0] readData1, readData2;
 			decodeExecute_ex[0] = ALUsrc ;
 			decodeExecute_ex[1] = RegDst;
 			decodeExecute_ex[4:2] = ALUOP;
-			decodeExecute_readData1 = readData1;
-			decodeExecute_readData2 = readData2;
-			//$monitor($time," regWrite and metToReg %d ",decodeExecute_wb);
-
+			
+			
+			///no forwarding`
+			decodeExecute_readData1 = readData1; //rs
+			decodeExecute_readData2 = readData2; //rt
+			
+			///forwarding
+				
+				//ALU
+			 execCondA = (executeMemory_rd == decodeExecute_rs && executeMemory_wb[1]&&(executeMemory_rd !=0));
+			 execCondB = (executeMemory_rd == decodeExecute_rt &&  executeMemory_wb[1]&&(executeMemory_rd !=0));
+				// MEM
+			 memCondA = (memoryWriteBack_rd == decodeExecute_rs &&  memoryWriteBack_wb[1]&&(memoryWriteBack_rd !=0)&& !execCondA);
+			 memCondB = (memoryWriteBack_rd == decodeExecute_rt && memoryWriteBack_wb[1]&&(memoryWriteBack_rd !=0) && !execCondB);
+			//forwardA
+			if(execCondA)
+				decodeExecute_readData1= executeMemory_aluOut;
+			if(memCondA)
+				decodeExecute_readData1= (memoryWriteBack_wb [0])? memoryWriteBack_memOut:memoryWriteBack_aluOut;
+			//forwardB
+			if(execCondB)
+				decodeExecute_readData2 = executeMemory_aluOut;
+			if(memCondB)
+				decodeExecute_readData2 = (memoryWriteBack_wb [0])? memoryWriteBack_memOut:memoryWriteBack_aluOut;
+			
+			
+			#1 $monitor($time," in decode read1 %d and read2  %d alu %d \n",decodeExecute_readData1,decodeExecute_readData2,memoryWriteBack_aluOut);
+			//#1 $monitor($time," conditions %d %d \n",execCondA,execCondB);
 		
 		end
-	
-	always @(posedge clk)
-	begin
-				    $display($time, "is current time\n");
-				//#1	$monitor($time," decode exec zero alusrc = %d",decodeExecute_ex[0]);
-				//#1	$monitor($time," Value of r1main = %d\n Value of r2main = %d",decodeExecute_readData1,decodeExecute_readData2);
-				#20  $monitor($time," memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
-				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
-				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
-				//#5 	$monitor($time," read1 =%d read2 =%d ",readData1,readData2);
-				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
-				#35 $monitor($time , "Data Stored = %d\n " , dataMemory[13]);
-					#20	$monitor($time," pc =%d pcrc =%d ",pc,pcSrc);
 
-			
-	end
-	
 	
 	//Execute stage
 	always @(posedge clk)
