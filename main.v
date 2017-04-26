@@ -23,7 +23,7 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	reg  [4:0] decodeExecute_rt;
 	reg  [4:0] decodeExecute_rd;//write register
 	reg  [1:0] decodeExecute_wb;//reqWrite memToReg
-	reg  [2:0] decodeExecute_mem;//memRead memWrite branch
+	reg  [3:0] decodeExecute_mem;//memRead memWrite branch branchNotEqual
 	reg  [4:0] decodeExecute_ex;//ALUSrc regDest ALUOp(3 bits)
 	
 	//execute reg
@@ -33,7 +33,7 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	reg [31:0] executeMemory_regToMem;
 	reg [4:0] executeMemory_rd;//write register
 	reg [1:0] executeMemory_wb;//reqWrite memToReg
-	reg [2:0] executeMemory_mem;//memRead memWrite branch
+	reg [3:0] executeMemory_mem;//memRead memWrite branch branchNotEqual
 	
 	//memory reg
 	reg  [31:0] memoryWriteBack_aluOut;
@@ -55,6 +55,7 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	//Control signals
 	reg pcSrc;
 	reg branch; 
+	reg branchNotEqual;
 	reg RegDst;
 	reg MemRead;
 	reg MemToReg;
@@ -92,7 +93,7 @@ wire [31:0] readData1, readData2;
 		begin
 			fetchDecode_instruction <= instructionMemory[pc] ;
 			fetchDecode_PC <= pc+1 ;
-			pcSrc = executeMemory_zf & executeMemory_mem[2];
+			pcSrc = (executeMemory_zf & executeMemory_mem[2])||((!executeMemory_zf) & executeMemory_mem[3]);
 			if(pcSrc ==1'b1)
 				pc <= executeMemory_branchAddress; 	
 			else  
@@ -108,6 +109,7 @@ wire [31:0] readData1, readData2;
 		if(fetchDecode_instruction[31:26] == 6'b0)// R type
 			begin
 					branch = 0; 
+					branchNotEqual <= 0;
 					RegDst = 1;
 					MemRead = 0;
 					MemToReg = 0;
@@ -127,6 +129,7 @@ wire [31:0] readData1, readData2;
 		else if (fetchDecode_instruction[31:26] == 6'h23) //LW
 			begin
 					branch <= 0; 
+					branchNotEqual <= 0;
 					RegDst <= 0;
 					MemRead <= 1;
 					MemToReg<= 1;
@@ -137,7 +140,8 @@ wire [31:0] readData1, readData2;
 			end
 		else if(fetchDecode_instruction[31:26] == 6'h2B) //SW
 			begin
-					branch <= 0; 
+					branch <= 0;
+					branchNotEqual <= 0;
 					RegDst <= 0;
 					MemRead <= 0;
 					MemToReg<= 0;
@@ -149,6 +153,7 @@ wire [31:0] readData1, readData2;
 		else if(fetchDecode_instruction[31:26] == 6'h8) // ADDI
 			begin
 					branch = 0; 
+					branchNotEqual <= 0;
 					RegDst = 0;
 					MemRead = 0;
 					MemToReg = 0;
@@ -159,7 +164,8 @@ wire [31:0] readData1, readData2;
 			end
 		else if(fetchDecode_instruction[31:26] == 6'hD) // ORI
 			begin
-					branch <= 0; 
+					branch <= 0;
+					branchNotEqual <= 0;
 					RegDst <= 0;
 					MemRead <= 0;
 					MemToReg<= 0;
@@ -170,7 +176,8 @@ wire [31:0] readData1, readData2;
 			end
 		else if(fetchDecode_instruction[31:26] == 6'hC) // ANDI
 			begin
-					branch <= 0; 
+					branch <= 0;
+					branchNotEqual <= 0;					
 					RegDst <= 0;
 					MemRead <= 0;
 					MemToReg<= 0;
@@ -183,6 +190,7 @@ wire [31:0] readData1, readData2;
 		else if(fetchDecode_instruction[31:26] == 6'h4) // BEQ
 			begin
 					branch <= 1; 
+					branchNotEqual <= 0;
 					RegDst <= 0;
 					MemRead <= 0;
 					MemToReg<= 0;
@@ -193,7 +201,8 @@ wire [31:0] readData1, readData2;
 			end
 		else if(fetchDecode_instruction[31:26] == 6'h5) //BNE
 			begin
-					branch <= 1; 
+					branch <=0;
+					branchNotEqual <= 1;
 					RegDst <= 0;
 					MemRead <= 0;
 					MemToReg<= 0;
@@ -214,6 +223,7 @@ wire [31:0] readData1, readData2;
 			decodeExecute_mem[0] = MemRead;
 			decodeExecute_mem[1] = MemWrite;
 			decodeExecute_mem[2] = branch;
+			decodeExecute_mem[3] = branchNotEqual;
 			decodeExecute_ex[0] = ALUsrc ;
 			decodeExecute_ex[1] = RegDst;
 			decodeExecute_ex[4:2] = ALUOP;
@@ -232,9 +242,9 @@ wire [31:0] readData1, readData2;
 				#20  $monitor($time," memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
 				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
 				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
-				#5 	$monitor($time," read1 =%d read2 =%d ",readData1,readData2);
+				//#5 	$monitor($time," read1 =%d read2 =%d ",readData1,readData2);
 				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
-			//	#35 $monitor($time , "Data Stored = %d\n " , dataMemory[0]);
+				#35 $monitor($time , "Data Stored = %d\n " , dataMemory[13]);
 					#20	$monitor($time," pc =%d pcrc =%d ",pc,pcSrc);
 
 			
