@@ -6,7 +6,6 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	input [31:0] instruction ;
 	input [31:0] data ;
 	
-	
 	//program counter
 	reg [31:0] pc;
 	
@@ -64,15 +63,18 @@ module main(clk , instruction , instructionAddress , data , dataAddress , writeE
 	reg ALUsrc;
 	reg RegWrite;
 	
+	//Counter
+	integer i;
 	
-//Register file
-wire [31:0] readData1, readData2;	
+	
+	//Register file
+	wire [31:0] readData1, readData2;	
 
-// forwarding conditions
-reg execCondA;
-reg memCondA;
-reg execCondB;
-reg memCondB;
+	// forwarding conditions
+	reg execCondA;
+	reg memCondA;
+	reg execCondB;
+	reg memCondB;
 	
 	// TestBench /////////////////
 	always @(posedge writeEnable)
@@ -80,27 +82,22 @@ reg memCondB;
 		instructionMemory[instructionAddress] = instruction ;
 		dataMemory [dataAddress] = data ;
 		pc <=0 ;
-	//	$monitor("IM = %b\n DM = %d\n",instructionMemory[instructionAddress],dataMemory [dataAddress]);
 	end
 	//////////////////
 	
 	
 	///////// loop for printing the output
 	always @(posedge clk)
-	begin
-				    $display($time, "is current time\n");
-				//#1	$monitor($time," decode exec zero alusrc = %d",decodeExecute_ex[0]);
-				//#1	$monitor($time," Value of r1main = %d\n Value of r2main = %d",decodeExecute_readData1,decodeExecute_readData2);
-				#20  $monitor($time," memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
-				#30	$monitor($time," executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
-				#25 $monitor($time," decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
-				//#5 	$monitor($time," read1 =%d read2 =%d ",readData1,readData2);
-				#15	$monitor($time," fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
-				#35 $monitor($time , "Data Stored = %d\n " , dataMemory[13]);
-					#20	$monitor($time," pc =%d pcrc =%d ",pc,pcSrc);
+		begin
+			$display("Start of cycle");
+			#20	$monitor(" memoryWriteBack_aluOut = %b\n memoryWriteBack_memOut = %b\n memoryWriteBack_rd = %b\n memoryWriteBack_wb = %b\n",memoryWriteBack_aluOut,memoryWriteBack_memOut, memoryWriteBack_rd,memoryWriteBack_wb);
+			#30	$monitor(" executeMemory_branchAddress = %b\n executeMemory_zf = %b\n executeMemory_aluOut = %b\n executeMemory_regToMem = %b\n executeMemory_rd = %b\n executeMemory_wb = %b\n executeMemory_mem = %b\n",executeMemory_branchAddress,executeMemory_zf,executeMemory_aluOut, executeMemory_regToMem,executeMemory_rd,executeMemory_wb,executeMemory_mem);
+			#30 $monitor(" decodeExecute_PC = %b\n decodeExecute_signExtend = %b\n decodeExecute_rt = %b\n decodeExecute_rd = %b\n decodeExecute_wb = %b\n decodeExecute_mem = %b\n decodeExecute_ex = %b\n",decodeExecute_PC,decodeExecute_signExtend,decodeExecute_rt, decodeExecute_rd,decodeExecute_wb,decodeExecute_mem,decodeExecute_ex);
+			#15	$monitor(" fetchDecode_PC = %b\n fetchDecode_instruction = %b\n",fetchDecode_PC,fetchDecode_instruction);
+			#10 $display("End of cycle\n");
 
 			
-	end
+		end
 	
 	
 	//modules used
@@ -127,8 +124,8 @@ reg memCondB;
 		#75
 		begin
 			
-		if(fetchDecode_instruction[31:26] == 6'b0)// R type
-			begin
+			if(fetchDecode_instruction[31:26] == 6'b0)// R type
+				begin
 					branch = 0; 
 					branchNotEqual <= 0;
 					RegDst = 1;
@@ -137,18 +134,18 @@ reg memCondB;
 					MemWrite = 0;
 					ALUsrc = 0;
 					RegWrite = 1;
-				case(fetchDecode_instruction[5:0])
-					6'h20 : ALUOP <= 0 ;  //add
-					6'h22 : ALUOP <= 1 ;//SUB
-					6'h0 : ALUOP <= 4 ; // SLL	
-					6'h2 : ALUOP  <= 5 ;//SRL	
-					6'h24 : ALUOP <= 2 ;// AND		
-					6'h25 : ALUOP <= 3 ; // OR		
-					6'h2A : ALUOP <= 7 ;// SLT	
-				endcase
-			end
-		else if (fetchDecode_instruction[31:26] == 6'h23) //LW
-			begin
+					case(fetchDecode_instruction[5:0])
+						6'h20 : ALUOP <= 0 ;  //add
+						6'h22 : ALUOP <= 1 ;//SUB
+						6'h0 : ALUOP <= 4 ; // SLL	
+						6'h2 : ALUOP  <= 5 ;//SRL	
+						6'h24 : ALUOP <= 2 ;// AND		
+						6'h25 : ALUOP <= 3 ; // OR		
+						6'h2A : ALUOP <= 7 ;// SLT	
+					endcase
+				end
+			else if (fetchDecode_instruction[31:26] == 6'h23) //LW
+				begin
 					branch <= 0; 
 					branchNotEqual <= 0;
 					RegDst <= 0;
@@ -158,9 +155,9 @@ reg memCondB;
 					ALUsrc <=1;
 					RegWrite <= 1;	
 					ALUOP <= 0 ;
-			end
-		else if(fetchDecode_instruction[31:26] == 6'h2B) //SW
-			begin
+				end
+			else if(fetchDecode_instruction[31:26] == 6'h2B) //SW
+				begin
 					branch <= 0;
 					branchNotEqual <= 0;
 					RegDst <= 0;
@@ -170,9 +167,9 @@ reg memCondB;
 					ALUsrc <=1;
 					RegWrite <= 0;		
 					ALUOP <= 0 ;
-			end
-		else if(fetchDecode_instruction[31:26] == 6'h8) // ADDI
-			begin
+				end
+			else if(fetchDecode_instruction[31:26] == 6'h8) // ADDI
+				begin
 					branch = 0; 
 					branchNotEqual <= 0;
 					RegDst = 0;
@@ -182,9 +179,9 @@ reg memCondB;
 					ALUsrc =1;
 					RegWrite = 1;		
 					ALUOP = 0 ;
-			end
-		else if(fetchDecode_instruction[31:26] == 6'hD) // ORI
-			begin
+				end
+			else if(fetchDecode_instruction[31:26] == 6'hD) // ORI
+				begin
 					branch <= 0;
 					branchNotEqual <= 0;
 					RegDst <= 0;
@@ -194,9 +191,9 @@ reg memCondB;
 					ALUsrc <=1;
 					RegWrite <= 1;		
 					ALUOP <= 3 ;
-			end
-		else if(fetchDecode_instruction[31:26] == 6'hC) // ANDI
-			begin
+				end
+			else if(fetchDecode_instruction[31:26] == 6'hC) // ANDI
+				begin
 					branch <= 0;
 					branchNotEqual <= 0;					
 					RegDst <= 0;
@@ -206,10 +203,10 @@ reg memCondB;
 					ALUsrc <=1;
 					RegWrite <= 1;		
 					ALUOP <= 2 ;
-			end
-			
-		else if(fetchDecode_instruction[31:26] == 6'h4) // BEQ
-			begin
+				end
+				
+			else if(fetchDecode_instruction[31:26] == 6'h4) // BEQ
+				begin
 					branch <= 1; 
 					branchNotEqual <= 0;
 					RegDst <= 0;
@@ -219,9 +216,9 @@ reg memCondB;
 					ALUsrc <= 0;
 					RegWrite <= 0;	
 					ALUOP <= 0 ;
-			end
-		else if(fetchDecode_instruction[31:26] == 6'h5) //BNE
-			begin
+				end
+			else if(fetchDecode_instruction[31:26] == 6'h5) //BNE
+				begin
 					branch <=0;
 					branchNotEqual <= 1;
 					RegDst <= 0;
@@ -231,8 +228,8 @@ reg memCondB;
 					ALUsrc <=0;
 					RegWrite <= 0;
 					ALUOP <= 0 ;
-			end
-			
+				end
+				
 			#5		//// add delay here  
 			decodeExecute_PC = fetchDecode_PC;
 			decodeExecute_signExtend = {{16{fetchDecode_instruction[15]}},fetchDecode_instruction[15:0]};
@@ -248,20 +245,20 @@ reg memCondB;
 			decodeExecute_ex[0] = ALUsrc ;
 			decodeExecute_ex[1] = RegDst;
 			decodeExecute_ex[4:2] = ALUOP;
-			
-			
+				
+				
 			///no forwarding`
 			decodeExecute_readData1 = readData1; //rs
 			decodeExecute_readData2 = readData2; //rt
-			
-			///forwarding
 				
-				//ALU
-			 execCondA = (executeMemory_rd == decodeExecute_rs && executeMemory_wb[1]&&(executeMemory_rd !=0));
-			 execCondB = (executeMemory_rd == decodeExecute_rt &&  executeMemory_wb[1]&&(executeMemory_rd !=0));
-				// MEM
-			 memCondA = (memoryWriteBack_rd == decodeExecute_rs &&  memoryWriteBack_wb[1]&&(memoryWriteBack_rd !=0)&& !execCondA);
-			 memCondB = (memoryWriteBack_rd == decodeExecute_rt && memoryWriteBack_wb[1]&&(memoryWriteBack_rd !=0) && !execCondB);
+			///forwarding
+			
+			//ALU
+			execCondA = (executeMemory_rd == decodeExecute_rs && executeMemory_wb[1]&&(executeMemory_rd !=0));
+			execCondB = (executeMemory_rd == decodeExecute_rt &&  executeMemory_wb[1]&&(executeMemory_rd !=0));
+			// MEM
+			memCondA = (memoryWriteBack_rd == decodeExecute_rs &&  memoryWriteBack_wb[1]&&(memoryWriteBack_rd !=0)&& !execCondA);
+			memCondB = (memoryWriteBack_rd == decodeExecute_rt && memoryWriteBack_wb[1]&&(memoryWriteBack_rd !=0) && !execCondB);
 			//forwardA
 			if(execCondA)
 				decodeExecute_readData1= executeMemory_aluOut;
@@ -272,10 +269,6 @@ reg memCondB;
 				decodeExecute_readData2 = executeMemory_aluOut;
 			if(memCondB)
 				decodeExecute_readData2 = (memoryWriteBack_wb [0])? memoryWriteBack_memOut:memoryWriteBack_aluOut;
-			
-			
-			#1 $monitor($time," in decode read1 %d and read2  %d alu %d \n",decodeExecute_readData1,decodeExecute_readData2,memoryWriteBack_aluOut);
-			//#1 $monitor($time," conditions %d %d \n",execCondA,execCondB);
 		
 		end
 
@@ -292,7 +285,6 @@ reg memCondB;
 			executeMemory_wb = decodeExecute_wb;
 			executeMemory_mem = decodeExecute_mem;
 		
-	//	#55	$monitor($time," out =%d ",executeMemory_aluOut);
 		end
 	
 	//Memory stage
@@ -309,6 +301,15 @@ reg memCondB;
 			memoryWriteBack_rd = executeMemory_rd;
 			memoryWriteBack_wb = executeMemory_wb;
 		
+		end
+		
+	initial
+		begin
+			#5350
+			for(i = 0 ; i < 32 ; i = i + 1)
+				begin
+					$display("Value in memory at address %d = %d",i,dataMemory[i]);
+				end
 		end
 	
 endmodule
